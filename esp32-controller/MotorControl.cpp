@@ -19,7 +19,7 @@ MotorController::MotorController(int l0, int l1, int l2, int l3) {
     m2len = l2;
     m3len = l3;
 
-    cable_length_queue = xQueueCreate(20, sizeof(t_CableLengths));
+    cable_length_queue = xQueueCreate(20, sizeof(t_CableLengths)); // This creates a queue of cable lengths to process. maximum of 20 messages in the queue
 
     // start the task on the second core
     xTaskCreatePinnedToCore(
@@ -32,6 +32,7 @@ MotorController::MotorController(int l0, int l1, int l2, int l3) {
                     0);          /* pin task to core 0 */                  
 }
 
+/*Sets the Direction pin of the stepper motor to LOW so that it is letting cable out*/
 void MotorController::motorOut(bool m0, bool m1, bool m2, bool m3) {
     if (m0) digitalWrite(M0_DIR_PIN, LOW);
     if (m1) digitalWrite(M1_DIR_PIN, LOW);
@@ -39,6 +40,7 @@ void MotorController::motorOut(bool m0, bool m1, bool m2, bool m3) {
     if (m3) digitalWrite(M3_DIR_PIN, LOW);
 }
 
+/*Sets the Direction pin of the stepper motor to HIGH so that it is reeling cable in*/
 void MotorController::motorIn(bool m0, bool m1, bool m2, bool m3) {
     if (m0) digitalWrite(M0_DIR_PIN, HIGH);
     if (m1) digitalWrite(M1_DIR_PIN, HIGH);
@@ -46,6 +48,8 @@ void MotorController::motorIn(bool m0, bool m1, bool m2, bool m3) {
     if (m3) digitalWrite(M3_DIR_PIN, HIGH);
 }
 
+
+/*pulses the Step pin of the stepper motor to move the motor one step*/
 void MotorController::motorStep(bool m0, bool m1, bool m2, bool m3) {
     if (m0) digitalWrite(M0_STEP_PIN, HIGH);
     if (m1) digitalWrite(M1_STEP_PIN, HIGH);
@@ -59,20 +63,7 @@ void MotorController::motorStep(bool m0, bool m1, bool m2, bool m3) {
     delay(2);
 }
 
-/*
-void MotorController::set_m0_length(int l0) {
-    
-}
-void MotorController::set_m1_length(int l1) {
-
-}
-void MotorController::set_m2_length(int l2) {
-
-}
-void MotorController::set_m3_length(int l3) {
-
-}*/
-
+/*this method takes a set of 4 cable lengths and posts it to the xQueue "cable_length_queue"*/
 void MotorController::setCableLenghts(int l0, int l1, int l2, int l3) {
     t_CableLengths msg;
     msg.len0 = l0;
@@ -83,6 +74,7 @@ void MotorController::setCableLenghts(int l0, int l1, int l2, int l3) {
         Serial.println("Error: sending to queue failed.");
     }
 }
+
 
 void MotorController::set_cable_lengths_task(void *params) {
     MotorController *mc = (MotorController *) params; 
